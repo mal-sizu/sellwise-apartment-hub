@@ -1,0 +1,71 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 263 85% 66%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 240 4% 20%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 259 61% 75%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 263 85% 66%;
+
+    --radius: 1rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+  }
+}
+
+@layer utilities {
+  .form-input {
+    @apply w-full rounded-2xl border border-gray-300 bg-white px-4 py-2 text-sm transition duration-200 focus:border-villain-500 focus:outline-none focus:ring-2 focus:ring-villain-500/20;
+  }
+
+  .btn-primary {
+    @apply rounded-2xl bg-villain-500 px-4 py-2 text-white shadow-soft transition hover:bg-villain-600 focus:outline-none focus:ring-2 focus:ring-villain-500/20;
+  }
+
+  .card {
+    @apply rounded-2xl bg-white p-6 shadow-soft;
+  }
+
+  .animate-enter {
+    @apply animate-fade-in;
+  }
+}
