@@ -69,10 +69,10 @@ const errorMiddleware = (
     // Express validator errors
     statusCode = 400;
     message = 'Validation Error';
-    errors = err.map((e: ValidationError) => ({
+    errors = err.map((e: any) => ({
       field: e.param,
       message: e.msg,
-    }));
+    }));  
   }
 
   // Send error response

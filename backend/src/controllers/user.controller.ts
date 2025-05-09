@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import User, { IUser } from '../models/User';
 import { asyncHandler } from '../middlewares/async.middleware';
@@ -11,12 +11,13 @@ import { successResponse, unauthorizedResponse, notFoundResponse } from '../util
  * @param user - User object
  */
 const generateToken = (user: IUser): string => {
+  const options: SignOptions = {
+    expiresIn: process.env.JWT_EXPIRES_IN ? parseInt(process.env.JWT_EXPIRES_IN) : '1d',
+  };
   return jwt.sign(
     { id: user._id, role: user.role },
-    process.env.JWT_SECRET as string,
-    {
-      expiresIn: process.env.JWT_EXPIRES_IN || '1d',
-    }
+    process.env.JWT_SECRET || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMjM0NSIsImlhdCI6MTc0NjcxNDU3MywiZXhwIjoxNzQ2NzE4MTczfQ.N818d1xCKlrPQsmEEN7YtrrOMvmede7p-UgR8ZmzLLo',
+    options
   );
 };
 
