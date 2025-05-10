@@ -7,8 +7,9 @@ import { Customer } from "@/types";
 import { getCustomers, getCustomerById } from "@/services/customerService";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { Search, Download } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import jsPDF from "jspdf";
 
 const Customers = () => {
   const { user } = useAuth();
@@ -32,6 +33,49 @@ const Customers = () => {
 
     loadCustomers();
   }, []);
+
+  const generatePDF = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    
+    // Add title
+    doc.setFontSize(20);
+    doc.text("Customer Report", pageWidth / 2, 20, { align: "center" });
+    
+    // Add date
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, pageWidth / 2, 30, { align: "center" });
+    
+    // Table headers
+    doc.setFontSize(12);
+    doc.setFont(undefined, "bold");
+    let yPos = 40;
+    const headers = ["Name", "Email", "Phone", "Registration Date", "Interests"];
+    headers.forEach((header, index) => {
+      doc.text(header, 20 + (index * 35), yPos);
+    });
+    
+    // Table content
+    doc.setFont(undefined, "normal");
+    customers.forEach((customer, index) => {
+      yPos = 50 + (index * 10);
+      
+      // Add new page if content exceeds page height
+      if (yPos > 280) {
+        doc.addPage();
+        yPos = 20;
+      }
+      
+      doc.text(`${customer.firstName} ${customer.lastName}`, 20, yPos);
+      doc.text(customer.email, 55, yPos);
+      doc.text(customer.phone, 90, yPos);
+      doc.text(new Date(customer.registrationDate).toLocaleDateString(), 125, yPos);
+      doc.text(customer.interests?.join(", ") || "None", 160, yPos);
+    });
+    
+    // Save the PDF
+    doc.save("customer-report.pdf");
+  };
 
   const handleViewCustomer = async (id: string) => {
     try {
@@ -69,7 +113,7 @@ const Customers = () => {
               <h1 className="text-2xl font-bold text-villain-800">Customers</h1>
               <p className="text-gray-500">View and manage customers</p>
             </div>
-            <div className="w-full md:w-auto flex">
+            <div className="w-full md:w-auto flex gap-4">
               <div className="relative flex-1 md:w-64">
                 <Input
                   placeholder="Search customers..."
@@ -79,6 +123,14 @@ const Customers = () => {
                 />
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               </div>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={generatePDF}
+                title="Download Customer Report"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
             </div>
           </div>
 

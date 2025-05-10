@@ -5,6 +5,7 @@ import AdminSidebar from "../../components/ui/admin/AdminSidebar";
 import { getSellers, getSellerById, updateSellerStatus } from "../../services/sellerService";
 import { Seller, PaginationParams } from "../../types";
 import { toast } from "sonner";
+import html2pdf from 'html2pdf.js';
 
 const Sellers = () => {
   const [sellers, setSellers] = useState<Seller[]>([]);
@@ -17,16 +18,22 @@ const Sellers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [viewingSeller, setViewingSeller] = useState<Seller | null>(null);
   const [updatingSellerId, setUpdatingSellerId] = useState<string | null>(null);
+  const [filteredSellers, setFilteredSellers] = useState<Seller[]>([]);
+
+  // Initialize filteredSellers with sellers
+  useEffect(() => {
+    setFilteredSellers(sellers);
+  }, [sellers]);
 
   // Fetch sellers
   useEffect(() => {
     const fetchSellers = async () => {
       setLoading(true);
       try {
-        const response = await getSellers(
-          pagination,
-          searchTerm ? { search: searchTerm } : undefined
-        );
+        const response = await getSellers({
+          ...pagination,
+          search: searchTerm.trim() // Pass search term directly in pagination params
+        });
         setSellers(response.sellers);
         setTotalPages(response.totalPages);
       } catch (error) {
@@ -37,7 +44,12 @@ const Sellers = () => {
       }
     };
     
-    fetchSellers();
+    // Add a debounce to prevent too many API calls while typing
+    const timeoutId = setTimeout(() => {
+      fetchSellers();
+    }, 300);
+    
+    return () => clearTimeout(timeoutId);
   }, [pagination, searchTerm]);
 
   // Open seller details modal
@@ -77,10 +89,96 @@ const Sellers = () => {
     }
   };
 
-  // Handle search
+  // Handle search with simple array filtering
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page
+    const searchValue = e.target.value;
+    setSearchTerm(searchValue);
+    
+    if (!searchValue.trim()) {
+      setFilteredSellers(sellers);
+      return;
+    }
+    
+    const lowerCaseSearch = searchValue.toLowerCase();
+    const filtered = sellers.filter(seller => 
+      seller.firstName.toLowerCase().includes(lowerCaseSearch) ||
+      seller.lastName.toLowerCase().includes(lowerCaseSearch) ||
+      `${seller.firstName} ${seller.lastName}`.toLowerCase().includes(lowerCaseSearch)
+    );
+    
+    setFilteredSellers(filtered);
+  };
+
+  // Generate PDF report
+  const generatePDF = async () => {
+    try {
+      // Create report content
+      const reportContent = document.createElement('div');
+      reportContent.innerHTML = `
+        <div style="padding: 20px; font-family: Arial, sans-serif;">
+          <h1 style="color: #2c3e50; text-align: center;">Sellers Report</h1>
+          <p style="text-align: center; color: #7f8c8d;">Generated on ${new Date().toLocaleDateString()}</p>
+          
+          ${sellers.map(seller => `
+            <div style="margin: 20px 0; padding: 15px; border: 1px solid #e0e0e0; border-radius: 5px;">
+              <h2 style="color: #34495e; margin-bottom: 10px;">${seller.firstName} ${seller.lastName}</h2>
+              
+              <div style="margin: 10px 0;">
+                <strong>Business Information:</strong>
+                <ul style="list-style: none; padding-left: 20px;">
+                  <li>Name: ${seller.business.name}</li>
+                  <li>Registration: ${seller.business.registrationNumber}</li>
+                  <li>Designation: ${seller.business.designation}</li>
+                </ul>
+              </div>
+              
+              <div style="margin: 10px 0;">
+                <strong>Contact Information:</strong>
+                <ul style="list-style: none; padding-left: 20px;">
+                  <li>Email: ${seller.email}</li>
+                  <li>Phone: ${seller.phone}</li>
+                  <li>Username: ${seller.username}</li>
+                </ul>
+              </div>
+              
+              <div style="margin: 10px 0;">
+                <strong>Additional Details:</strong>
+                <ul style="list-style: none; padding-left: 20px;">
+                  <li>Status: ${seller.status}</li>
+                  <li>Registration Date: ${new Date(seller.registrationDate).toLocaleDateString()}</li>
+                  <li>Preferred Languages: ${seller.preferredLanguages.join(', ')}</li>
+                </ul>
+              </div>
+              
+              <div style="margin: 10px 0;">
+                <strong>Social Links:</strong>
+                <ul style="list-style: none; padding-left: 20px;">
+                  <li>Facebook: ${seller.socialLinks.facebook}</li>
+                  <li>LinkedIn: ${seller.socialLinks.linkedin}</li>
+                  <li>Instagram: ${seller.socialLinks.instagram}</li>
+                </ul>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+      // Configure PDF options
+      const opt = {
+        margin: 1,
+        filename: `sellers-report-${new Date().toISOString().split('T')[0]}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      };
+
+      // Generate PDF
+      await html2pdf().set(opt).from(reportContent).save();
+      toast.success('PDF report generated successfully');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF report');
+    }
   };
 
   // Animation variants
@@ -116,16 +214,42 @@ const Sellers = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <motion.h1 
-            className="text-2xl font-bold text-villain-800 mb-6"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            Seller Management
-          </motion.h1>
+          <div className="flex justify-between items-center mb-6">
+            <motion.h1 
+              className="text-2xl font-bold text-villain-800"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              Seller Management
+            </motion.h1>
+            
+            <motion.button
+              className="px-4 py-2 bg-villain-500 text-white rounded-md hover:bg-villain-600 transition-colors flex items-center gap-2"
+              onClick={generatePDF}
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                ></path>
+              </svg>
+              Generate Report
+            </motion.button>
+          </div>
           
-          {/* Search */}
+          {/* Search with clear button */}
           <motion.div
             className="card mb-6"
             initial={{ opacity: 0, y: 20 }}
@@ -152,11 +276,32 @@ const Sellers = () => {
                 </div>
                 <input
                   type="text"
-                  placeholder="Search by seller ID or name..."
-                  className="w-full border-none outline-none focus:outline-none focus:border-none pl-16"
+                  placeholder="Search by seller name..."
+                  className="w-full pl-10 pr-10 py-2 border-none outline-none focus:border-none focus:outline-none"
                   value={searchTerm}
                   onChange={handleSearch}
                 />
+                {searchTerm && (
+                  <button
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    onClick={() => setSearchTerm('')}
+                  >
+                    <svg
+                      className="h-5 w-5 text-gray-400 hover:text-gray-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      ></path>
+                    </svg>
+                  </button>
+                )}
               </div>
             </div>
           </motion.div>
@@ -240,7 +385,7 @@ const Sellers = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {sellers.map((seller) => (
+                    {filteredSellers.map((seller) => (
                       <motion.tr
                         key={seller._id}
                         variants={rowVariants}
