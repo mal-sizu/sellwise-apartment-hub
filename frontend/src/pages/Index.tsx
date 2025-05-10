@@ -61,7 +61,7 @@ const PropertyCard = ({ property }: { property: Property }) => {
             </div>
           )}
         </div>
-        <Link to={`/property/${property.id}`}>
+        <Link to={`/property/${property._id}`}>
           <Button className="w-full bg-villain-500 hover:bg-villain-600">
             View Details
           </Button>

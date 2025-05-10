@@ -26,6 +26,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { updatePassword } from "@/services/authService";
+import { toast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
   const { user, logout, updateUser, deleteAccount } = useAuth();
@@ -115,6 +117,17 @@ const Dashboard = () => {
       // Implement password update logic here
       setIsPasswordOpen(false);
       setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      await updatePassword(
+        user._id,
+        passwordData.currentPassword,
+        passwordData.newPassword
+      );
+
+      toast({
+        title: "Success",
+        description: "Password changed successfully",
+        variant: "default"
+      });
     } catch (error) {
       console.error("Failed to update password:", error);
     }

@@ -17,7 +17,7 @@ export const getCustomers = async (
     }
     
     const response = await apiClient.get(`/customers?${params.toString()}`);
-    return response.data.data;
+    return response.data;
   } catch (error) {
     console.error('Error fetching customers:', error);
     throw error;
@@ -35,11 +35,22 @@ export const getCustomerById = async (id: string) => {
   }
 };
 
+// Get current customer profile
+export const getCurrentCustomer = async (id: string) => {
+  try {
+    const response = await apiClient.get(`/customers/${id}`);
+    return response.data.data;
+  } catch (error) {
+    console.error(`Error fetching customer with ID ${id}:`, error);
+    throw error;
+  }
+};
+
 // Create a new customer
 export const createCustomer = async (customerData: Omit<Customer, '_id' | 'registrationDate'>) => {
   try {
     const response = await apiClient.post('/customers', customerData);
-    return response.data.data;
+    return response.data;
   } catch (error) {
     console.error('Error creating customer:', error);
     throw error;
@@ -56,6 +67,7 @@ export const updateCustomer = async (id: string, customerData: Partial<Customer>
     throw error;
   }
 };
+
 
 // Delete a customer
 export const deleteCustomer = async (id: string) => {

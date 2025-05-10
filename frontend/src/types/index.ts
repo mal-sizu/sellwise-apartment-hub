@@ -62,7 +62,7 @@ export type Customer = {
 };
 
 export type User = {
-  id: string;
+  _id: string;
   role: 'admin' | 'seller' | 'customer';
   name: string;
   email: string;
