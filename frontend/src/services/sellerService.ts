@@ -68,7 +68,7 @@ export const deleteSeller = async (id: string) => {
     const response = await apiClient.delete(`/sellers/${id}`);
     return response.data;
   } catch (error) {
-    console.error(`Error deleting seller with ID ${id}:`, error);
+    console.error("Error deleting seller:", error);
     throw error;
   }
 };

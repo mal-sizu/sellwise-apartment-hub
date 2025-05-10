@@ -4,22 +4,32 @@ import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/ui/common/Navbar";
 import AdminSidebar from "@/components/ui/admin/AdminSidebar";
 import { Customer } from "@/types";
-import { getCustomers, getCustomerById } from "@/services/customerService";
+import { getCustomers, getCustomerById, deleteCustomer } from "@/services/customerService";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Download } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Search, Download, Trash2 } from "lucide-react";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
 import jsPDF from "jspdf";
+import { useToast } from "@/hooks/use-toast";
 
 const Customers = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [viewingCustomer, setViewingCustomer] = useState<Customer | null>(null);
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
 
   useEffect(() => {
-    const loadCustomers = async () => {
+    const loadCustomers = async () => { 
       try {
         const response = await getCustomers({ page: 1, limit: 20 });
         setCustomers(response.data);
@@ -88,6 +98,34 @@ const Customers = () => {
     }
   };
 
+  const handleDeleteCustomer = async () => {
+    if (!customerToDelete) return;
+    
+    try {
+      await deleteCustomer(customerToDelete._id);
+      
+      // Update the customers list
+      setCustomers(customers.filter(c => c._id !== customerToDelete._id));
+      
+      // Show success toast
+      toast({
+        title: "Customer deleted",
+        description: `${customerToDelete.firstName} ${customerToDelete.lastName} has been removed.`,
+        variant: "default",
+      });
+      
+      // Close the confirmation dialog
+      setCustomerToDelete(null);
+    } catch (error) {
+      console.error("Error deleting customer:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete customer. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const filteredCustomers = customers?.filter(customer => 
     customer.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -149,7 +187,7 @@ const Customers = () => {
                       <th className="px-6 py-3 text-gray-500 font-medium">Email</th>
                       <th className="px-6 py-3 text-gray-500 font-medium">Phone</th>
                       <th className="px-6 py-3 text-gray-500 font-medium">Registration Date</th>
-                      <th className="px-6 py-3 text-gray-500 font-medium">Action</th>
+                      <th className="px-6 py-3 text-gray-500 font-medium">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -172,13 +210,22 @@ const Customers = () => {
                             {new Date(customer.registrationDate).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4">
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleViewCustomer(customer._id)}
-                            >
-                              View Details
-                            </Button>
+                            <div className="flex space-x-2">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleViewCustomer(customer._id)}
+                              >
+                                View Details
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="destructive"
+                                onClick={() => setCustomerToDelete(customer)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -241,7 +288,38 @@ const Customers = () => {
                 </div>
               </DialogContent>
             </Dialog>
-          )}    </div>
+          )}
+
+          {customerToDelete && (
+            <Dialog
+              open={!!customerToDelete}
+              onOpenChange={() => setCustomerToDelete(null)}
+            >
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Confirm Deletion</DialogTitle>
+                  <DialogDescription>
+                    Are you sure you want to delete the customer <span className="font-medium">{customerToDelete.firstName} {customerToDelete.lastName}</span>? This action cannot be undone.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="flex space-x-2 justify-end pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setCustomerToDelete(null)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={handleDeleteCustomer}
+                  >
+                    Delete Customer
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
+    </div>
   );};
 
 export default Customers;

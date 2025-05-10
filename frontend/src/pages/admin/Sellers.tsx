@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../../components/ui/common/Navbar";
 import AdminSidebar from "../../components/ui/admin/AdminSidebar";
-import { getSellers, getSellerById, updateSellerStatus } from "../../services/sellerService";
+import { getSellers, getSellerById, updateSellerStatus, deleteSeller } from "../../services/sellerService";
 import { Seller, PaginationParams } from "../../types";
 import { toast } from "sonner";
 import html2pdf from 'html2pdf.js';
@@ -19,6 +19,7 @@ const Sellers = () => {
   const [viewingSeller, setViewingSeller] = useState<Seller | null>(null);
   const [updatingSellerId, setUpdatingSellerId] = useState<string | null>(null);
   const [filteredSellers, setFilteredSellers] = useState<Seller[]>([]);
+  const [deletingSellerId, setDeletingSellerId] = useState<string | null>(null);
 
   // Initialize filteredSellers with sellers
   useEffect(() => {
@@ -198,6 +199,49 @@ const Sellers = () => {
       opacity: 1,
       x: 0,
       transition: { type: "spring", stiffness: 100 }
+    }
+  };
+
+  // Add this state for the confirmation modal
+  const [confirmDelete, setConfirmDelete] = useState<{show: boolean; sellerId: string | null}>({
+    show: false,
+    sellerId: null
+  });
+
+  // Update the handleDeleteSeller function to use the modal instead of window.confirm
+  const handleDeleteSeller = (id: string) => {
+    setConfirmDelete({
+      show: true,
+      sellerId: id
+    });
+  };
+
+  // Add this function to handle the actual deletion after confirmation
+  const confirmDeleteSeller = async () => {
+    if (!confirmDelete.sellerId) return;
+    
+    setDeletingSellerId(confirmDelete.sellerId);
+    
+    try {
+      await deleteSeller(confirmDelete.sellerId);
+      
+      // Remove the seller from the list
+      setSellers(prevSellers => 
+        prevSellers.filter(seller => seller._id !== confirmDelete.sellerId)
+      );
+      
+      // If we're viewing the seller that was deleted, close the modal
+      if (viewingSeller && viewingSeller._id === confirmDelete.sellerId) {
+        setViewingSeller(null);
+      }
+      
+      toast.success("Seller deleted successfully");
+    } catch (error) {
+      console.error("Error deleting seller:", error);
+      toast.error("Failed to delete seller");
+    } finally {
+      setDeletingSellerId(null);
+      setConfirmDelete({ show: false, sellerId: null });
     }
   };
 
@@ -521,6 +565,26 @@ const Sellers = () => {
                                 ></path>
                               </svg>
                             </button>
+                            <button
+                              onClick={() => handleDeleteSeller(seller._id)}
+                              className="text-red-500 hover:text-red-600 transition ml-2"
+                              title="Delete seller"
+                            >
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                ></path>
+                              </svg>
+                            </button>
                           </div>
                         </td>
                       </motion.tr>
@@ -778,7 +842,8 @@ const Sellers = () => {
                                 viewBox="0 0 24 24"
                                 xmlns="http://www.w3.org/2000/svg"
                               >
-                                <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z" />
+
+                                <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.36 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439.793-.001 1.44.645 1.44 1.439z" />
                               </svg>
                               Instagram
                             </a>
@@ -836,9 +901,123 @@ const Sellers = () => {
                       >
                         Approve
                       </button>
+                      {viewingSeller && (
+                        <button
+                          onClick={() => {
+                            handleDeleteSeller(viewingSeller._id);
+                          }}
+                          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                        >
+                          Delete Seller
+                        </button>
+                      )}
                     </div>
                   )}
 
+                </div>
+              </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {confirmDelete.show && (
+          <>
+            <motion.div
+              className="fixed inset-0 bg-black bg-opacity-50 z-40"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setConfirmDelete({ show: false, sellerId: null })}
+            />
+            
+            <motion.div
+              className="fixed z-50 inset-0 flex items-center justify-center p-4 pointer-events-none"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <motion.div
+                className="bg-white rounded-2xl shadow-xl max-w-md w-full pointer-events-auto"
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 50 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-bold text-red-600">
+                      Confirm Deletion
+                    </h3>
+                    
+                    <button
+                      onClick={() => setConfirmDelete({ show: false, sellerId: null })}
+                      className="text-gray-400 hover:text-gray-600 transition"
+                    >
+                      <svg
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        ></path>
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <div className="mb-6">
+                    <p className="text-gray-700">
+                      Are you sure you want to delete this seller? This action cannot be undone and will remove all associated data.
+                    </p>
+                  </div>
+                  
+                  <div className="flex justify-end space-x-3">
+                    <button
+                      onClick={() => setConfirmDelete({ show: false, sellerId: null })}
+                      className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={confirmDeleteSeller}
+                      disabled={deletingSellerId === confirmDelete.sellerId}
+                      className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition flex items-center"
+                    >
+                      {deletingSellerId === confirmDelete.sellerId ? (
+                        <>
+                          <svg
+                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          Deleting...
+                        </>
+                      ) : (
+                        "Delete Seller"
+                      )}
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             </motion.div>
