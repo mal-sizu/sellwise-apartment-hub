@@ -27,7 +27,7 @@ const Properties = () => {
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [activeFilter, setActiveFilter] = useState(false);
 
-  // Fetch properties based on current pagination, sort, and filters
+  // Fetch properties based on current pagination, sort, and filters 
   useEffect(() => {
     const fetchProperties = async () => {
       setLoading(true);
@@ -52,7 +52,7 @@ const Properties = () => {
     
     try {
       await deleteProperty(id);
-      setProperties(prevProperties => prevProperties.filter(prop => prop.id !== id));
+      setProperties(prevProperties => prevProperties.filter(prop => prop._id !== id));
       toast.success("Property deleted successfully");
     } catch (error) {
       console.error("Error deleting property:", error);
@@ -520,7 +520,7 @@ const Properties = () => {
                               </svg>
                             </Link>
                             <button
-                              onClick={() => setShowDeleteConfirm(property.id)}
+                              onClick={() => setShowDeleteConfirm(property._id)}
                               className="text-red-500 hover:text-red-600"
                             >
                               <svg
@@ -617,7 +617,7 @@ const Properties = () => {
                 <div className="flex justify-end space-x-3">
                   <button
                     type="button"
-                    className="px-4 py-2 text-gray-700 hover:text-gray-900 transition"
+                    className="px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition"
                     onClick={() => setShowDeleteConfirm(null)}
                     disabled={isDeleting}
                   >
@@ -626,12 +626,12 @@ const Properties = () => {
                   
                   <button
                     type="button"
-                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition flex items-center"
                     onClick={() => handleDeleteProperty(showDeleteConfirm)}
                     disabled={isDeleting}
                   >
                     {isDeleting ? (
-                      <div className="flex items-center">
+                      <>
                         <svg
                           className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
                           fill="none"
@@ -652,9 +652,25 @@ const Properties = () => {
                           ></path>
                         </svg>
                         Deleting...
-                      </div>
+                      </>
                     ) : (
-                      "Yes, Delete"
+                      <>
+                        <svg
+                          className="w-4 h-4 mr-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          ></path>
+                        </svg>
+                        Yes, Delete
+                      </>
                     )}
                   </button>
                 </div>

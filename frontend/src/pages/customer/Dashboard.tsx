@@ -255,8 +255,8 @@ const Dashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {properties.slice(0, 6).map((property) => (
                   <Link 
-                    key={property.id} 
-                    to={`/property/${property.id}`}
+                    key={property._id} 
+                    to={`/property/${property._id}`}
                     className="block bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition duration-200"
                   >
                     <div className="relative pb-[65%] bg-gray-100">
@@ -280,7 +280,7 @@ const Dashboard = () => {
                         <p className="font-bold text-villain-800">
                           {new Intl.NumberFormat('en-US', {
                             style: 'currency',
-                            currency: 'USD',
+                            currency: 'LKR',
                             maximumFractionDigits: 0
                           }).format(property.price)}
                         </p>
