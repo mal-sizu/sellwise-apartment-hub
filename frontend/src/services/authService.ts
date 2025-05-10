@@ -1,110 +1,111 @@
-
-import apiCall from './api';
+import apiClient from './apiClient';
 import { User } from '../types';
-import { createCustomer } from './customerService';
-import { createSeller } from './sellerService';
-
-// Mock users for authentication
-const mockUsers: User[] = [
-  {
-    id: "u1",
-    role: "admin",
-    name: "Admin User",
-    email: "admin@example.com"
-  },
-  {
-    id: "u2",
-    role: "seller",
-    name: "John Doe",
-    email: "john.doe@example.com"
-  },
-  {
-    id: "u3",
-    role: "customer",
-    name: "Jane Smith",
-    email: "jane.smith@example.com"
-  }
-];
 
 // Login function
 export const login = async (email: string, password: string) => {
-  // For demo purposes, any password works
-  const user = mockUsers.find(u => u.email === email);
-  
-  if (!user) {
-    return apiCall(null, true); // Simulate API error for invalid email
+  try {
+    const response = await apiClient.post('/users/login', { email, password });
+    
+    // Store user in localStorage for persistence
+    localStorage.setItem('currentUser', JSON.stringify({
+      user: response.data.data.user,
+      token: response.data.data.token
+    }));
+    
+    // Store token separately for API client authorization
+    localStorage.setItem('auth_token', response.data.data.token);
+    
+    return {
+      user: response.data.data.user,
+      token: response.data.data.token
+    };
+  } catch (error) {
+    console.error('Login error:', error);
+    throw error;
   }
-  
-  // Store user in localStorage for persistence
-  localStorage.setItem('currentUser', JSON.stringify({
-    user,
-    token: "mock-jwt-token"
-  }));
-  
-  return apiCall({
-    user,
-    token: "mock-jwt-token"
-  });
+}
+
+// Get current user from API
+export const getCurrentUserFromAPI = async () => {
+  try {
+    const response = await apiClient.get('/users/me');
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching current user:', error);
+    throw error;
+  }
+};
+
+// Update user password
+export const updatePassword = async (userId: string, currentPassword: string, newPassword: string) => {
+  try {
+    const response = await apiClient.put(`/users/${userId}/password`, {
+      currentPassword,
+      newPassword
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating password:', error);
+    throw error;
+  }
 };
 
 // Register seller function
-export const registerSeller = async (sellerData: any) => {
+export const registerSeller = async (sellerData: {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  companyName?: string;
+}) => {
   try {
-    // Create the seller record
-    const seller = await createSeller(sellerData);
+    // Create the seller record using the API
+    const response = await apiClient.post('/sellers', sellerData);
     
-    // Create a corresponding user record
-    const newUser: User = {
-      id: `u${mockUsers.length + 1}`,
-      role: "seller",
-      name: `${sellerData.firstName} ${sellerData.lastName}`,
-      email: sellerData.email
-    };
-    
-    mockUsers.push(newUser);
-    
-    return apiCall({
+    return {
       success: true,
-      message: "Seller registration successful. Please log in."
-    });
+      message: "Seller registration successful. Please log in.",
+      data: response.data.data
+    };
   } catch (error) {
-    return apiCall({
-      success: false,
-      message: "Registration failed. Please try again."
-    }, true);
+    console.error('Seller registration error:', error);
+    throw error;
   }
 };
 
 // Register customer function
-export const registerCustomer = async (customerData: any) => {
+export const registerCustomer = async (customerData: {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+}) => {
   try {
-    // Create the customer record
-    const customer = await createCustomer(customerData);
+    // Create the customer record using the API
+    const response = await apiClient.post('/customers', customerData);
     
-    // Create a corresponding user record
-    const newUser: User = {
-      id: `u${mockUsers.length + 1}`,
-      role: "customer",
-      name: `${customerData.firstName} ${customerData.lastName}`,
-      email: customerData.email
-    };
-    
-    mockUsers.push(newUser);
-    
-    return apiCall({
+    return {
       success: true,
-      message: "Customer registration successful. Please log in."
-    });
+      message: "Customer registration successful. Please log in.",
+      data: response.data.data
+    };
   } catch (error) {
-    return apiCall({
-      success: false,
-      message: "Registration failed. Please try again."
-    }, true);
+    console.error('Customer registration error:', error);
+    throw error;
   }
 };
 
 // Register function (generic handler)
-export const register = async (userData: any, role: 'seller' | 'customer') => {
+export const register = async (userData: {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  companyName?: string;
+}, role: 'seller' | 'customer') => {
   if (role === 'seller') {
     return registerSeller(userData);
   } else {
@@ -114,12 +115,13 @@ export const register = async (userData: any, role: 'seller' | 'customer') => {
 
 // Logout function
 export const logout = async () => {
-  // Remove user from localStorage
+  // Remove user and token from localStorage
   localStorage.removeItem('currentUser');
+  localStorage.removeItem('auth_token');
   
-  return apiCall({
+  return {
     success: true
-  });
+  };
 };
 
 // Check auth status
@@ -129,19 +131,19 @@ export const checkAuthStatus = async () => {
   
   if (storedUser) {
     const { user } = JSON.parse(storedUser);
-    return apiCall({
+    return {
       user,
       isAuthenticated: true
-    });
+    };
   }
   
-  return apiCall({
+  return {
     user: null,
     isAuthenticated: false
-  });
+  };
 };
 
-// Get current user
+// Get current user from localStorage
 export const getCurrentUser = (): User | null => {
   const storedUser = localStorage.getItem('currentUser');
   if (storedUser) {

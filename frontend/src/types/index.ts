@@ -26,7 +26,7 @@ export type Property = {
 };
 
 export type Seller = {
-  id: string;
+  _id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -51,7 +51,7 @@ export type Seller = {
 };
 
 export type Customer = {
-  id: string;
+  _id: string;
   firstName: string;
   lastName: string;
   email: string;

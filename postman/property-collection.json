@@ -1,0 +1,261 @@
+{
+  "info": {
+    "_postman_id": "e5a7b8c9-d0e1-4f23-a456-789b0c1d2e3f",
+    "name": "Apartment Hub - Property API",
+    "description": "Collection for property-related endpoints in the Apartment Hub API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Public Routes",
+      "item": [
+        {
+          "name": "Get All Properties",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/properties",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "properties"]
+            },
+            "description": "Get all properties with optional filters"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Properties (with filters)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/properties?type=Residential&city=Toronto&minPrice=100000&maxPrice=500000&forSale=true&beds=2&baths=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "properties"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "Residential",
+                  "description": "Property type (Residential, Commercial, Industrial)"
+                },
+                {
+                  "key": "city",
+                  "value": "Toronto",
+                  "description": "City name"
+                },
+                {
+                  "key": "minPrice",
+                  "value": "100000",
+                  "description": "Minimum price"
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "500000",
+                  "description": "Maximum price"
+                },
+                {
+                  "key": "forSale",
+                  "value": "true",
+                  "description": "Available for sale (true/false)"
+                },
+                {
+                  "key": "beds",
+                  "value": "2",
+                  "description": "Minimum number of bedrooms"
+                },
+                {
+                  "key": "baths",
+                  "value": "1",
+                  "description": "Minimum number of bathrooms"
+                }
+              ]
+            },
+            "description": "Get properties with filters"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Property By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/properties/{{propertyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "properties", "{{propertyId}}"]
+            },
+            "description": "Get a specific property by its ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Properties By Seller ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/properties/seller/{{sellerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "properties", "seller", "{{sellerId}}"]
+            },
+            "description": "Get all properties listed by a specific seller"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints that don't require authentication"
+    },
+    {
+      "name": "Private Routes (Seller/Admin)",
+      "item": [
+        {
+          "name": "Create Property",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "description": "JWT token for authentication"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Modern Downtown Apartment\",\n  \"type\": \"Residential\",\n  \"description\": \"Beautiful modern apartment in the heart of downtown with amazing views.\",\n  \"address\": {\n    \"house\": \"123\",\n    \"street\": \"Main Street\",\n    \"city\": \"Toronto\",\n    \"postalCode\": \"M5V 2K7\"\n  },\n  \"price\": 450000,\n  \"discountPrice\": 425000,\n  \"beds\": 2,\n  \"baths\": 2,\n  \"options\": {\n    \"parkingSpot\": true,\n    \"furnished\": true\n  },\n  \"images\": [\n    \"https://example.com/image1.jpg\",\n    \"https://example.com/image2.jpg\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/properties",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "properties"]
+            },
+            "description": "Create a new property listing (Seller only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Property",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "description": "JWT token for authentication"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Apartment Title\",\n  \"description\": \"Updated description with new details about the property.\",\n  \"price\": 475000,\n  \"discountPrice\": 450000,\n  \"options\": {\n    \"parkingSpot\": true,\n    \"furnished\": false\n  },\n  \"images\": [\n    \"https://example.com/updated-image1.jpg\",\n    \"https://example.com/updated-image2.jpg\",\n    \"https://example.com/updated-image3.jpg\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/properties/{{propertyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "properties", "{{propertyId}}"]
+            },
+            "description": "Update an existing property (Owner or Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Property Availability",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "description": "JWT token for authentication"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"forSale\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/properties/{{propertyId}}/availability",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "properties", "{{propertyId}}", "availability"]
+            },
+            "description": "Update property availability status (Owner or Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Property",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "description": "JWT token for authentication"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/properties/{{propertyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "properties", "{{propertyId}}"]
+            },
+            "description": "Delete a property (Owner or Admin only)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints that require authentication as a seller or admin"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string",
+      "description": "Base URL for the API"
+    },
+    {
+      "key": "authToken",
+      "value": "YOUR_JWT_TOKEN",
+      "type": "string",
+      "description": "JWT authentication token"
+    },
+    {
+      "key": "propertyId",
+      "value": "PROPERTY_ID",
+      "type": "string",
+      "description": "ID of a property"
+    },
+    {
+      "key": "sellerId",
+      "value": "SELLER_ID",
+      "type": "string",
+      "description": "ID of a seller"
+    }
+  ]
+}

@@ -10,16 +10,17 @@ import { successResponse, unauthorizedResponse, notFoundResponse } from '../util
  * Generate JWT token for a user
  * @param user - User object
  */
-const generateToken = (user: IUser): string => {
+function generateToken(user: IUser): string {
   const options: SignOptions = {
-    expiresIn: process.env.JWT_EXPIRES_IN ? parseInt(process.env.JWT_EXPIRES_IN) : '1d',
+    expiresIn: process.env.JWT_EXPIRES_IN ? parseInt(process.env.JWT_EXPIRES_IN) : 86400, // 1 day
+    algorithm: 'HS256',
   };
-  return jwt.sign(
-    { id: user._id, role: user.role },
-    process.env.JWT_SECRET || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMjM0NSIsImlhdCI6MTc0NjcxNDU3MywiZXhwIjoxNzQ2NzE4MTczfQ.N818d1xCKlrPQsmEEN7YtrrOMvmede7p-UgR8ZmzLLo',
-    options
-  );
-};
+
+  const jwtSecret =
+    process.env.JWT_SECRET || '5b8a422a3b50060bfa46a98f79c61b65e476fba0b1fc7deacd0db50e5331c665';
+
+  return jwt.sign({ id: user._id, role: user.role }, jwtSecret, options);
+}
 
 /**
  * @desc    Login user & get token

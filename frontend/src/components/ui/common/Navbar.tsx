@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, Home, MessageSquare } from "lucide-react";
+import { User, Home, Slack, MessageSquare } from "lucide-react";
 
 const Navbar = () => {
   const location = useLocation();
@@ -29,7 +29,7 @@ const Navbar = () => {
     
     switch (user.role) {
       case "admin":
-        return "/admin";
+        return "/admin/dashboard";
       case "seller":
         return "/seller/dashboard";
       case "customer":
@@ -83,8 +83,8 @@ const Navbar = () => {
                         : "text-gray-600 hover:text-villain-500"
                     }`}
                   >
-                    <Home className="h-5 w-5 inline-block mr-1" />
-                    Dashboard
+                    <Slack className="h-5 w-5 inline-block mr-1" />
+                    
                   </Link>
                 </motion.div>
                 
@@ -103,7 +103,7 @@ const Navbar = () => {
                     }`}
                   >
                     <MessageSquare className="h-5 w-5 inline-block mr-1" />
-                    Chat Assistant
+                    
                   </Link>
                   {location.pathname.startsWith("/chat") && (
                     <motion.div
@@ -159,7 +159,7 @@ const Navbar = () => {
                 className="relative"
               >
                 <Link
-                  to="/admin"
+                  to="/admin/dashboard"
                   className={`font-medium ${
                     location.pathname.startsWith("/admin")
                       ? "text-villain-500"

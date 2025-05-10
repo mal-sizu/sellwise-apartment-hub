@@ -23,6 +23,8 @@ import Sellers from "./pages/admin/Sellers";
 import Customers from "./pages/admin/Customers";
 import Chat from "./pages/chat/Chat";
 import NotFound from "./pages/NotFound";
+import { default as AdminDashboard } from "./pages/admin/Dashboard";
+import EditProperty from "./pages/admin/EditProperty";
 
 const queryClient = new QueryClient();
 
@@ -119,10 +121,10 @@ const App = () => (
               
               {/* Admin Routes */}
               <Route 
-                path="/admin" 
+                path="/admin/dashboard" 
                 element={
                   <ProtectedRoute 
-                    element={<Properties />} 
+                    element={<AdminDashboard />} 
                     requiredRole="admin" 
                   />
                 } 
@@ -150,6 +152,15 @@ const App = () => (
                 element={
                   <ProtectedRoute 
                     element={<Customers />} 
+                    requiredRole="admin" 
+                  />
+                } 
+              />
+              <Route 
+                path="/admin/property/edit/:id"
+                element={
+                  <ProtectedRoute 
+                    element={<EditProperty />} 
                     requiredRole="admin" 
                   />
                 } 

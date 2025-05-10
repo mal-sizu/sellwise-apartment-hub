@@ -13,6 +13,7 @@ const router = express.Router();
 
 // Public routes - get properties and property by ID
 router.get('/', propertyController.getProperties);
+router.get('/seller/:sellerId', propertyController.getPropertiesBySellerId);
 router.get('/:id', propertyController.getPropertyById);
 
 // Private routes - require authentication

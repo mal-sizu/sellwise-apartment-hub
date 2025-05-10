@@ -6,6 +6,7 @@ import {
   FieldPath,
   RegisterOptions
 } from "react-hook-form";
+import { useDropzone } from 'react-dropzone';
 
 type FormFileUploadProps<T extends FieldValues> = {
   name: FieldPath<T>;
@@ -16,6 +17,8 @@ type FormFileUploadProps<T extends FieldValues> = {
   multiple?: boolean;
   maxFiles?: number;
   maxSize?: number; // In MB
+  errorMessage?: string;
+  onFileSelect?: (files: File | File[] | null) => void;
 };
 
 const FormFileUpload = <T extends FieldValues>({
@@ -26,55 +29,34 @@ const FormFileUpload = <T extends FieldValues>({
   accept = "image/jpeg, image/png",
   multiple = false,
   maxFiles = 1,
-  maxSize = 2 // 2MB default
+  maxSize = 2,
+  errorMessage: externalErrorMessage,
+  onFileSelect
 }: FormFileUploadProps<T>) => {
   const { control, formState: { errors } } = useFormContext();
-  const [isDragging, setIsDragging] = useState(false);
-  const errorMessage = errors[name]?.message as string | undefined;
-
-  // Convert MB to bytes
+  const [previews, setPreviews] = useState<string[]>([]);
+  
+  const errorMessage = externalErrorMessage || (errors[name]?.message as string | undefined);
   const maxSizeBytes = maxSize * 1024 * 1024;
-
-  const handleDragEnter = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!disabled) setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!disabled) setIsDragging(true);
-  };
 
   const validateFiles = (files: File[]): { valid: File[]; errors: string[] } => {
     const validFiles: File[] = [];
     const errors: string[] = [];
 
-    // Check if too many files were selected
     if (files.length > maxFiles) {
       errors.push(`Maximum ${maxFiles} file${maxFiles !== 1 ? 's' : ''} allowed`);
       return { valid: validFiles, errors };
     }
 
-    // Validate each file
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-
-      // Check file type
       const fileType = file.type;
+      
       if (!accept.includes(fileType)) {
         errors.push(`File "${file.name}" has an unsupported format`);
         continue;
       }
 
-      // Check file size
       if (file.size > maxSizeBytes) {
         errors.push(`File "${file.name}" exceeds the ${maxSize}MB size limit`);
         continue;
@@ -97,46 +79,45 @@ const FormFileUpload = <T extends FieldValues>({
         control={control}
         rules={rules}
         render={({ field }) => {
-          // Keep track of selected files and their preview URLs
-          const [previews, setPreviews] = useState<string[]>([]);
-          
-          const handleFilesSelected = (fileList: FileList | null) => {
-            if (!fileList) return;
-            
-            const filesArray = Array.from(fileList);
-            const { valid, errors: fileErrors } = validateFiles(filesArray);
-            
-            if (fileErrors.length) {
-              // In a real app, you'd display these errors to the user
-              console.error(fileErrors);
-              return;
-            }
-            
-            // Create preview URLs for valid files
-            const newPreviews = valid.map(file => URL.createObjectURL(file));
-            
-            // Update previews
-            setPreviews(prevPreviews => {
-              // Revoke old preview URLs to prevent memory leaks
-              prevPreviews.forEach(url => URL.revokeObjectURL(url));
-              return newPreviews;
-            });
-            
-            // Update form value
-            field.onChange(multiple ? valid : valid[0] || null);
-          };
-          
-          const handleDrop = (e: React.DragEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setIsDragging(false);
-            
-            if (disabled) return;
-            
-            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-              handleFilesSelected(e.dataTransfer.files);
-            }
-          };
+          // Define the dropzone inside the Controller render prop
+          // so it has access to the field value
+          const {
+            getRootProps,
+            getInputProps,
+            isDragActive
+          } = useDropzone({
+            onDrop: (acceptedFiles: File[]) => {
+              const { valid, errors: fileErrors } = validateFiles(acceptedFiles);
+                    
+              if (fileErrors.length) {
+                console.error(fileErrors);
+                return;
+              }
+                    
+              const newPreviews = valid.map(file => URL.createObjectURL(file));
+                    
+              setPreviews(prevPreviews => {
+                // Revoke old preview URLs to prevent memory leaks
+                prevPreviews.forEach(url => URL.revokeObjectURL(url));
+                return newPreviews;
+              });
+                    
+              const filesValue = multiple ? valid : valid[0] || null;
+              field.onChange(filesValue);
+                    
+              if (onFileSelect) {
+                onFileSelect(filesValue);
+              }
+            },
+            accept: accept.split(',').reduce((acc, type) => ({
+              ...acc,
+              [type.trim()]: []
+            }), {}),
+            multiple,
+            maxFiles,
+            maxSize: maxSizeBytes,
+            disabled
+          });
 
           const removeFile = (index: number) => {
             if (multiple) {
@@ -145,7 +126,10 @@ const FormFileUpload = <T extends FieldValues>({
                 : [];
               field.onChange(newFiles);
               
-              // Update previews
+              if (onFileSelect) {
+                onFileSelect(newFiles);
+              }
+              
               setPreviews(prev => {
                 const newPreviews = [...prev];
                 URL.revokeObjectURL(newPreviews[index]);
@@ -154,24 +138,26 @@ const FormFileUpload = <T extends FieldValues>({
               });
             } else {
               field.onChange(null);
+              
+              if (onFileSelect) {
+                onFileSelect(null);
+              }
+              
               setPreviews([]);
             }
           };
 
           return (
             <div className="space-y-2">
-              {/* Drag & Drop Area */}
               <div
-                onDragEnter={handleDragEnter}
-                onDragLeave={handleDragLeave}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
+                {...getRootProps()}
                 className={`border-2 border-dashed rounded-2xl p-6 text-center transition-colors ${
-                  isDragging
+                  isDragActive
                     ? "border-villain-500 bg-villain-50"
                     : "border-gray-300 hover:border-villain-500"
                 } ${disabled ? "bg-gray-100 cursor-not-allowed" : "cursor-pointer"}`}
               >
+                <input {...getInputProps()} />
                 <div className="space-y-2">
                   <svg
                     className="mx-auto h-12 w-12 text-gray-400"
@@ -188,24 +174,11 @@ const FormFileUpload = <T extends FieldValues>({
                     />
                   </svg>
                   <div className="text-sm text-gray-600">
-                    <label
-                      htmlFor={`file-upload-${name}`}
-                      className={`relative cursor-pointer rounded-md font-medium ${
-                        disabled ? "text-gray-400" : "text-villain-500 hover:text-villain-600"
-                      }`}
-                    >
-                      <span>Upload {multiple ? "files" : "a file"}</span>
-                      <input
-                        id={`file-upload-${name}`}
-                        name={`file-upload-${name}`}
-                        type="file"
-                        className="sr-only"
-                        accept={accept}
-                        multiple={multiple}
-                        disabled={disabled}
-                        onChange={(e) => handleFilesSelected(e.target.files)}
-                      />
-                    </label>
+                    <span className={`font-medium ${
+                      disabled ? "text-gray-400" : "text-villain-500 hover:text-villain-600"
+                    }`}>
+                      Upload {multiple ? "files" : "a file"}
+                    </span>
                     <p className="pl-1">or drag and drop</p>
                   </div>
                   <p className="text-xs text-gray-500">
@@ -219,7 +192,21 @@ const FormFileUpload = <T extends FieldValues>({
                 </div>
               </div>
 
-              {/* Preview Area */}
+              {field.value && (
+                <div className="mt-2">
+                  <p className="text-sm text-gray-600 mb-2">Selected files:</p>
+                  <ul className="text-sm text-gray-500">
+                    {multiple ? (
+                      Array.isArray(field.value) && field.value.map((file: File, index: number) => (
+                        <li key={index}>{file.name}</li>
+                      ))
+                    ) : (
+                      <li>{(field.value as File).name}</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+
               {previews.length > 0 && (
                 <div className="grid grid-cols-3 gap-3">
                   {previews.map((previewUrl, index) => (

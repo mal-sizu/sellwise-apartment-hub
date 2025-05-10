@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../../components/ui/common/Navbar";
+import AdminSidebar from "../../components/ui/admin/AdminSidebar";
 import { getProperties, deleteProperty, generateReport } from "../../services/propertyService";
 import { Property, PaginationParams, SortParams, FilterParams } from "../../types";
 import { SRI_LANKA_CITIES, PROPERTY_TYPES } from "../../constants";
 import { toast } from "sonner";
 import { File } from "lucide-react";
 
-const Properties = () => {
+const Properties = () => { 
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState<PaginationParams>({
@@ -138,11 +139,18 @@ const Properties = () => {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
       
-      <main className="flex-1 py-12">
-        <div className="container mx-auto px-4">
+      <div className="flex-1 container mx-auto px-4 py-8 flex">
+        <AdminSidebar />
+        
+        <motion.div
+          className="flex-1 ml-0 md:ml-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
           <div className="flex justify-between items-center mb-6">
             <motion.h1 
-              className="text-3xl font-bold text-villain-800"
+              className="text-2xl font-bold text-villain-800"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
@@ -493,7 +501,7 @@ const Properties = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end space-x-2">
                             <Link
-                              to={`/property/edit/${property.id}`}
+                              to={`/admin/property/edit/${property._id}`}
                               className="text-villain-500 hover:text-villain-600"
                             >
                               <svg
@@ -575,8 +583,8 @@ const Properties = () => {
               </div>
             )}
           </motion.div>
-        </div>
-      </main>
+        </motion.div>
+      </div>
       
       {/* Delete Confirmation Modal */}
       <AnimatePresence>

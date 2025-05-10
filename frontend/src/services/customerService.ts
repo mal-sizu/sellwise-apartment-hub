@@ -1,84 +1,69 @@
-
-import apiCall from './api';
+import apiClient from './apiClient';
 import { Customer, FilterParams, PaginationParams } from '../types';
-
-// Mock data
-const mockCustomers: Customer[] = [
-  {
-    id: "c1",
-    firstName: "Jane",
-    lastName: "Smith",
-    email: "jane.smith@example.com",
-    phone: "0771234567",
-    address: "123 Main St, Colombo",
-    interests: ["Residential", "Commercial"],
-    registrationDate: "2023-09-15"
-  },
-  {
-    id: "c2",
-    firstName: "Michael",
-    lastName: "Brown",
-    email: "michael.brown@example.com",
-    phone: "0767654321",
-    address: "456 Park Ave, Kandy",
-    interests: ["Residential"],
-    registrationDate: "2023-10-22"
-  },
-  {
-    id: "c3",
-    firstName: "Sarah",
-    lastName: "Johnson",
-    email: "sarah.johnson@example.com",
-    phone: "0751122334",
-    registrationDate: "2023-11-05"
-  }
-];
 
 // Get all customers with pagination and filtering
 export const getCustomers = async (
   pagination: PaginationParams = { page: 1, limit: 10 },
   filter?: FilterParams
 ) => {
-  let filteredCustomers = [...mockCustomers];
-
-  if (filter?.search) {
-    const searchTerm = filter.search.toLowerCase();
-    filteredCustomers = filteredCustomers.filter(customer => 
-      customer.id.toLowerCase().includes(searchTerm) ||
-      `${customer.firstName} ${customer.lastName}`.toLowerCase().includes(searchTerm)
-    );
+  try {
+    // Build query parameters
+    const params = new URLSearchParams();
+    params.append('page', pagination.page.toString());
+    params.append('limit', pagination.limit.toString());
+    
+    if (filter?.search) {
+      params.append('search', filter.search);
+    }
+    
+    const response = await apiClient.get(`/customers?${params.toString()}`);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching customers:', error);
+    throw error;
   }
-
-  const startIndex = (pagination.page - 1) * pagination.limit;
-  const paginatedCustomers = filteredCustomers.slice(startIndex, startIndex + pagination.limit);
-
-  return apiCall({
-    customers: paginatedCustomers,
-    total: filteredCustomers.length,
-    page: pagination.page,
-    limit: pagination.limit,
-    totalPages: Math.ceil(filteredCustomers.length / pagination.limit)
-  });
 };
 
 // Get a customer by ID
 export const getCustomerById = async (id: string) => {
-  const customer = mockCustomers.find(c => c.id === id);
-  
-  if (!customer) {
-    return apiCall(null, true);
+  try {
+    const response = await apiClient.get(`/customers/${id}`);
+    return response.data.data;
+  } catch (error) {
+    console.error(`Error fetching customer with ID ${id}:`, error);
+    throw error;
   }
-  
-  return apiCall(customer);
 };
 
 // Create a new customer
-export const createCustomer = async (customerData: Omit<Customer, 'id' | 'registrationDate'>) => {
-  const newCustomer: Customer = {
-    ...customerData,
-    id: `c${mockCustomers.length + 1}`,
-    registrationDate: new Date().toISOString().split('T')[0]
-  };
-  
-  return apiCall(newCustomer);
+export const createCustomer = async (customerData: Omit<Customer, '_id' | 'registrationDate'>) => {
+  try {
+    const response = await apiClient.post('/customers', customerData);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error creating customer:', error);
+    throw error;
+  }
+};
+
+// Update customer details
+export const updateCustomer = async (id: string, customerData: Partial<Customer>) => {
+  try {
+    const response = await apiClient.put(`/customers/${id}`, customerData);
+    return response.data.data;
+  } catch (error) {
+    console.error(`Error updating customer with ID ${id}:`, error);
+    throw error;
+  }
+};
+
+// Delete a customer
+export const deleteCustomer = async (id: string) => {
+  try {
+    const response = await apiClient.delete(`/customers/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error deleting customer with ID ${id}:`, error);
+    throw error;
+  }
 };

@@ -1,7 +1,7 @@
 
 import { useLocation, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, Users, Building, User } from "lucide-react";
+import { Slack, Users, Building, User } from "lucide-react";
 
 const AdminSidebar = () => {
   const location = useLocation();
@@ -10,9 +10,9 @@ const AdminSidebar = () => {
   const menuItems = [
     {
       name: "Dashboard",
-      path: "/admin",
-      icon: <Home className="w-5 h-5" />,
-      active: currentPath === "/admin"
+      path: "/admin/dashboard",
+      icon: <Slack className="w-5 h-5" />,
+      active: currentPath === "/admin/dashboard"
     },
     {
       name: "Properties",

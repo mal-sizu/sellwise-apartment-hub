@@ -37,22 +37,21 @@ export const propertyFormSchema = z.object({
   }),
   forSale: z.boolean(),
   price: z
-    .number()
-    .min(10000, "Price must be at least 10,000")
-    .max(10000000, "Price cannot exceed 10,000,000"),
+    .string()
+    // .min(10000, "Price must be at least 10,000")
+    // .max(10000000, "Price cannot exceed 10,000,000")
+    ,
   discountPrice: z
-    .number()
-    .min(1000, "Discount price must be at least 1,000")
-    .max(1000000, "Discount price cannot exceed 1,000,000")
+    .string()
+    // .min(1000, "Discount price must be at least 1,000")
+    // .max(1000000, "Discount price cannot exceed 1,000,000")
     .optional(),
   beds: z
-    .number()
-    .int("Beds must be a whole number")
+    .string()
     .min(0, "Beds cannot be negative")
     .optional(),
   baths: z
-    .number()
-    .int("Baths must be a whole number")
+    .string()
     .min(0, "Baths cannot be negative")
     .optional(),
   options: z.object({
@@ -74,10 +73,9 @@ export const propertyFormSchema = z.object({
         ),
       "Images must be in JPEG or PNG format"
     ),
-}).refine((data) => {
-  // If discount price is provided, ensure it's less than the regular price
+}).refine((data) => {  // If discount price is provided, ensure it's less than the regular price
   if (data.discountPrice) {
-    return data.discountPrice < data.price;
+    return Number(data.discountPrice) < Number(data.price);
   }
   return true;
 }, {

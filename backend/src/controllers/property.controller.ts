@@ -179,6 +179,21 @@ export const getPropertyById = asyncHandler(async (req: Request, res: Response) 
   return successResponse(res, 'Property retrieved successfully', property);
 });
 
+/**
+ * @desc    Get properties by seller ID
+ * @route   GET /api/properties/seller/:sellerId
+ * @access  Public
+ */
+export const getPropertiesBySellerId = asyncHandler(async (req: Request, res: Response) => {
+  const sellerId = req.params.sellerId;
+
+  // Find properties by seller ID
+  const properties = await Property.find({ sellerId })
+    .populate('sellerId', 'firstName lastName profilePicture');
+
+  return successResponse(res, 'Seller properties retrieved successfully', properties);
+});
+
 export default {
   createProperty,
   updateProperty,
@@ -186,4 +201,5 @@ export default {
   deleteProperty,
   getProperties,
   getPropertyById,
+  getPropertiesBySellerId,
 };

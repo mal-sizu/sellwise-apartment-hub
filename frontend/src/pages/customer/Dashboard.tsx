@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
@@ -16,9 +15,19 @@ const Dashboard = () => {
     const loadProperties = async () => {
       try {
         const response = await getProperties({ page: 1, limit: 10 });
-        setProperties(response.properties);
+        // Handle the case where response is an array directly
+        if (Array.isArray(response)) {
+          setProperties(response);
+        } else if (response && response.properties) {
+          // Handle the case where response is an object with properties field
+          setProperties(response.properties);
+        } else {
+          console.error("Unexpected API response format:", response);
+          setProperties([]);
+        }
       } catch (error) {
         console.error("Failed to load properties", error);
+        setProperties([]);
       } finally {
         setLoading(false);
       }
@@ -51,7 +60,7 @@ const Dashboard = () => {
               <div className="flex justify-center py-10">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-villain-500"></div>
               </div>
-            ) : (
+            ) : properties.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {properties.slice(0, 6).map((property) => (
                   <Link 
@@ -61,7 +70,7 @@ const Dashboard = () => {
                   >
                     <div className="relative pb-[65%] bg-gray-100">
                       <img
-                        src={property.images[0] || "/placeholder.svg"}
+                        src={property.images?.[0] || "/placeholder.svg"}
                         alt={property.title}
                         className="absolute inset-0 h-full w-full object-cover"
                       />
@@ -74,7 +83,7 @@ const Dashboard = () => {
                         {property.title}
                       </h3>
                       <p className="text-gray-500 text-sm mb-2 truncate">
-                        {property.address.city}, {property.address.street}
+                        {property.address?.city}, {property.address?.street}
                       </p>
                       <div className="flex justify-between items-center">
                         <p className="font-bold text-villain-800">
@@ -92,6 +101,8 @@ const Dashboard = () => {
                   </Link>
                 ))}
               </div>
+            ) : (
+              <p className="text-gray-500">No properties available at the moment.</p>
             )}
           </div>
 

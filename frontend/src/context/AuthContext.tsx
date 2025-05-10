@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '../types';
 import { checkAuthStatus, login, logout } from '../services/authService';
@@ -45,7 +44,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Success",
         description: `Welcome back, ${response.user.name}!`,
       });
-      return response;
     } catch (error) {
       toast({
         title: "Login Failed",

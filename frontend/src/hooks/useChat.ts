@@ -4,8 +4,7 @@ import {
   createChatSession, 
   getChatHistory, 
   sendMessage, 
-  ChatMessage, 
-  ChatSession 
+  ChatMessage
 } from '../services/chatApi';
 
 export function useChat(initialSessionId?: string, role: string = 'customer') {

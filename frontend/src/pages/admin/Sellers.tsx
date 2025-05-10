@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../../components/ui/common/Navbar";
+import AdminSidebar from "../../components/ui/admin/AdminSidebar";
 import { getSellers, getSellerById, updateSellerStatus } from "../../services/sellerService";
 import { Seller, PaginationParams } from "../../types";
 import { toast } from "sonner";
@@ -11,7 +11,7 @@ const Sellers = () => {
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState<PaginationParams>({
     page: 1,
-    limit: 10
+    limit: 10 
   });
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -58,12 +58,13 @@ const Sellers = () => {
     setUpdatingSellerId(id);
     
     try {
-      await updateSellerStatus(id, status);
+      const updatedSeller = await updateSellerStatus(id, status);
       
       // Update seller in the list
+      // The API returns { _id, status } so we need to update only the status
       setSellers(prevSellers =>
         prevSellers.map(seller =>
-          seller.id === id ? { ...seller, status } : seller
+          seller._id === updatedSeller._id ? { ...seller, status: updatedSeller.status } : seller
         )
       );
       
@@ -106,10 +107,17 @@ const Sellers = () => {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
       
-      <main className="flex-1 py-12">
-        <div className="container mx-auto px-4">
+      <div className="flex-1 container mx-auto px-4 py-8 flex">
+        <AdminSidebar />
+        
+        <motion.div
+          className="flex-1 ml-0 md:ml-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
           <motion.h1 
-            className="text-3xl font-bold text-villain-800 mb-6"
+            className="text-2xl font-bold text-villain-800 mb-6"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -145,7 +153,7 @@ const Sellers = () => {
                 <input
                   type="text"
                   placeholder="Search by seller ID or name..."
-                  className="form-input pl-10"
+                  className="form-input ml-10"
                   value={searchTerm}
                   onChange={handleSearch}
                 />
@@ -234,7 +242,7 @@ const Sellers = () => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {sellers.map((seller) => (
                       <motion.tr
-                        key={seller.id}
+                        key={seller._id}
                         variants={rowVariants}
                       >
                         <td className="px-6 py-4">
@@ -251,7 +259,7 @@ const Sellers = () => {
                                 {seller.firstName} {seller.lastName}
                               </div>
                               <div className="text-xs text-gray-500">
-                                {seller.id}
+                                {seller._id}
                               </div>
                             </div>
                           </div>
@@ -271,18 +279,18 @@ const Sellers = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {seller.registrationDate}
+                          {new Date(seller.registrationDate).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end space-x-2">
                             {seller.status === "Pending" && (
                               <>
                                 <button
-                                  onClick={() => handleUpdateStatus(seller.id, "Approved")}
-                                  disabled={updatingSellerId === seller.id}
+                                  onClick={() => handleUpdateStatus(seller._id, "Approved")}
+                                  disabled={updatingSellerId === seller._id}
                                   className="text-green-500 hover:text-green-600 transition"
                                 >
-                                  {updatingSellerId === seller.id ? (
+                                  {updatingSellerId === seller._id ? (
                                     <svg
                                       className="animate-spin h-5 w-5"
                                       fill="none"
@@ -321,8 +329,8 @@ const Sellers = () => {
                                 </button>
                                 
                                 <button
-                                  onClick={() => handleUpdateStatus(seller.id, "Rejected")}
-                                  disabled={updatingSellerId === seller.id}
+                                  onClick={() => handleUpdateStatus(seller._id, "Rejected")}
+                                  disabled={updatingSellerId === seller._id}
                                   className="text-red-500 hover:text-red-600 transition"
                                 >
                                   <svg
@@ -344,7 +352,7 @@ const Sellers = () => {
                             )}
                             
                             <button
-                              onClick={() => handleViewSeller(seller.id)}
+                              onClick={() => handleViewSeller(seller._id)}
                               className="text-villain-500 hover:text-villain-600 transition"
                             >
                               <svg
@@ -413,8 +421,8 @@ const Sellers = () => {
               </div>
             )}
           </motion.div>
-        </div>
-      </main>
+        </motion.div>
+      </div>
       
       {/* Seller Details Modal */}
       <AnimatePresence>
@@ -482,7 +490,7 @@ const Sellers = () => {
                         {viewingSeller.firstName} {viewingSeller.lastName}
                       </h4>
                       <p className="text-sm text-gray-500">
-                        ID: {viewingSeller.id}
+                        ID: {viewingSeller._id}
                       </p>
                       <div className="mt-2">
                         <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -667,7 +675,7 @@ const Sellers = () => {
                     <div className="mt-8 flex justify-end space-x-3">
                       <button
                         onClick={() => {
-                          handleUpdateStatus(viewingSeller.id, "Rejected");
+                          handleUpdateStatus(viewingSeller._id, "Rejected");
                           setViewingSeller(null);
                         }}
                         className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
@@ -676,7 +684,7 @@ const Sellers = () => {
                       </button>
                       <button
                         onClick={() => {
-                          handleUpdateStatus(viewingSeller.id, "Approved");
+                          handleUpdateStatus(viewingSeller._id, "Approved");
                           setViewingSeller(null);
                         }}
                         className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
@@ -685,6 +693,7 @@ const Sellers = () => {
                       </button>
                     </div>
                   )}
+
                 </div>
               </motion.div>
             </motion.div>

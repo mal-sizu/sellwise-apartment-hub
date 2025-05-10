@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -33,13 +32,31 @@ const Login = () => {
       setIsLoading(true);
       await login(email, password);
       navigate(from, { replace: true });
-    } catch (err) {
-      setError("Invalid email or password");
+    } catch (err: Error | unknown) {
+      // More specific error handling
+      if (err && typeof err === 'object' && 'response' in err) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        const errorResponse = err.response as { status: number; data?: { message: string } };
+        if (errorResponse.status === 401) {
+          setError("Invalid email or password");
+        } else if (errorResponse.data?.message) {
+          setError(errorResponse.data.message);
+        } else {
+          setError("Login failed. Please try again.");
+        }
+      } else if (err && typeof err === 'object' && 'request' in err) {
+        // The request was made but no response was received
+        setError("No response from server. Please check your connection.");
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        setError("An error occurred. Please try again.");
+      }
+      console.error("Login error:", err);
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
@@ -120,42 +137,6 @@ const Login = () => {
                 Register as Seller
               </Link>
             </p>
-          </div>
-
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <h3 className="text-sm font-medium text-gray-700 mb-4">Demo Accounts:</h3>
-            <div className="grid grid-cols-1 gap-3 text-xs">
-              <button
-                onClick={() => {
-                  setEmail("admin@example.com");
-                  setPassword("password");
-                }}
-                className="text-left p-2 rounded-lg border border-gray-200 hover:bg-gray-50"
-              >
-                <div className="font-semibold">Admin</div>
-                <div className="text-gray-500">admin@example.com / any password</div>
-              </button>
-              <button
-                onClick={() => {
-                  setEmail("john.doe@example.com");
-                  setPassword("password");
-                }}
-                className="text-left p-2 rounded-lg border border-gray-200 hover:bg-gray-50"
-              >
-                <div className="font-semibold">Seller</div>
-                <div className="text-gray-500">john.doe@example.com / any password</div>
-              </button>
-              <button
-                onClick={() => {
-                  setEmail("jane.smith@example.com");
-                  setPassword("password");
-                }}
-                className="text-left p-2 rounded-lg border border-gray-200 hover:bg-gray-50"
-              >
-                <div className="font-semibold">Customer</div>
-                <div className="text-gray-500">jane.smith@example.com / any password</div>
-              </button>
-            </div>
           </div>
         </motion.div>
       </main>

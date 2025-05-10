@@ -1,5 +1,6 @@
 import express, { Express } from 'express';
 import dotenv from 'dotenv';
+import cors from 'cors';
 import routes from './routes';
 import errorMiddleware from './middlewares/error.middleware';
 
@@ -8,6 +9,13 @@ dotenv.config();
 
 // Create Express application
 const app: Express = express();
+
+// Configure CORS
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:8080',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Middleware for parsing request body
 app.use(express.json());
