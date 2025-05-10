@@ -1,0 +1,117 @@
+{
+  "info": {
+    "name": "Real Estate API - Customer",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Customer (Register)",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/customers",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": {
+            "firstName": "Jane",
+            "lastName": "Smith",
+            "email": "jane@example.com",
+            "phone": "1234567890",
+            "address": "123 Main St",
+            "interests": ["Apartments", "Houses"],
+            "password": "password123"
+          }
+        }
+      }
+    },
+    {
+      "name": "Get All Customers (Admin)",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/customers",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Get Customer by ID",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/customers/{{customer_id}}",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Update Customer",
+      "request": {
+        "method": "PUT",
+        "url": "{{base_url}}/api/customers/{{customer_id}}",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": {
+            "firstName": "Jane Updated",
+            "lastName": "Smith Updated",
+            "phone": "0987654321",
+            "address": "456 New St",
+            "interests": ["Apartments", "Houses", "Condos"]
+          }
+        }
+      }
+    },
+    {
+      "name": "Delete Customer (Admin)",
+      "request": {
+        "method": "DELETE",
+        "url": "{{base_url}}/api/customers/{{customer_id}}",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}"
+          }
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:4000"
+    },
+    {
+      "key": "token",
+      "value": "your_jwt_token_here"
+    },
+    {
+      "key": "admin_token",
+      "value": "your_admin_jwt_token_here"
+    },
+    {
+      "key": "customer_id",
+      "value": "customer_id_here"
+    }
+  ]
+}

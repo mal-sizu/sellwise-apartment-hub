@@ -133,7 +133,7 @@ const Sellers = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
           >
             <div className="flex items-center">
-              <div className="relative flex-1">
+              <div className="relative flex-1 form-input">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg
                     className="h-5 w-5 text-gray-400"
@@ -153,7 +153,7 @@ const Sellers = () => {
                 <input
                   type="text"
                   placeholder="Search by seller ID or name..."
-                  className="form-input ml-10"
+                  className="w-full border-none outline-none focus:outline-none focus:border-none pl-16"
                   value={searchTerm}
                   onChange={handleSearch}
                 />

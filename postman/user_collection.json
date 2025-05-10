@@ -1,0 +1,122 @@
+{
+  "info": {
+    "name": "Real Estate API - User",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Login User",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/users/login",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": {
+            "email": "user@example.com",
+            "password": "password123"
+          }
+        }
+      }
+    },
+    {
+      "name": "Get Current User",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/users/me",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Update Password",
+      "request": {
+        "method": "PUT",
+        "url": "{{base_url}}/api/users/{{user_id}}/password",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": {
+            "currentPassword": "password123",
+            "newPassword": "newpassword123"
+          }
+        }
+      }
+    },
+    {
+      "name": "Create Admin User",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/users",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": {
+            "name": "New Admin",
+            "email": "admin@example.com",
+            "password": "password123",
+            "role": "admin"
+          }
+        }
+      }
+    },
+    {
+      "name": "Delete User",
+      "request": {
+        "method": "DELETE",
+        "url": "{{base_url}}/api/users/{{user_id}}",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}"
+          }
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:4000"
+    },
+    {
+      "key": "token",
+      "value": "your_jwt_token_here"
+    },
+    {
+      "key": "admin_token",
+      "value": "your_admin_jwt_token_here"
+    },
+    {
+      "key": "user_id",
+      "value": "user_id_here"
+    }
+  ]
+}

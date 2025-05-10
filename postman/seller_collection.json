@@ -1,0 +1,163 @@
+{
+  "info": {
+    "name": "Real Estate API - Seller",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Seller (Register)",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/sellers",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": {
+            "firstName": "John",
+            "lastName": "Doe",
+            "email": "john@example.com",
+            "phone": "1234567890",
+            "identification": "ID123456",
+            "profilePicture": "https://example.com/photo.jpg",
+            "bio": "Experienced real estate agent",
+            "socialLinks": {
+              "facebook": "https://facebook.com/johndoe",
+              "linkedin": "https://linkedin.com/in/johndoe",
+              "instagram": "https://instagram.com/johndoe"
+            },
+            "preferredLanguages": ["English", "Spanish"],
+            "business": {
+              "name": "John Doe Real Estate",
+              "registrationNumber": "REG123",
+              "designation": "Licensed Agent"
+            },
+            "username": "johndoe",
+            "password": "password123"
+          }
+        }
+      }
+    },
+    {
+      "name": "Get All Sellers (Admin)",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/sellers",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}"
+          }
+        ],
+        "query": [
+          {
+            "key": "status",
+            "value": "Approved",
+            "disabled": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "Get Seller by ID",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/sellers/{{seller_id}}",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Update Seller",
+      "request": {
+        "method": "PUT",
+        "url": "{{base_url}}/api/sellers/{{seller_id}}",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": {
+            "firstName": "John Updated",
+            "lastName": "Doe Updated",
+            "phone": "0987654321",
+            "bio": "Updated bio",
+            "socialLinks": {
+              "facebook": "https://facebook.com/johnupdated"
+            },
+            "preferredLanguages": ["English", "French"]
+          }
+        }
+      }
+    },
+    {
+      "name": "Delete Seller (Admin)",
+      "request": {
+        "method": "DELETE",
+        "url": "{{base_url}}/api/sellers/{{seller_id}}",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Update Seller Status (Admin)",
+      "request": {
+        "method": "PATCH",
+        "url": "{{base_url}}/api/sellers/{{seller_id}}/status",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": {
+            "status": "Approved"
+          }
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:4000"
+    },
+    {
+      "key": "token",
+      "value": "your_jwt_token_here"
+    },
+    {
+      "key": "admin_token",
+      "value": "your_admin_jwt_token_here"
+    },
+    {
+      "key": "seller_id",
+      "value": "seller_id_here"
+    }
+  ]
+}

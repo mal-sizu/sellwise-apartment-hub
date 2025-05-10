@@ -21,7 +21,8 @@ const Customers = () => {
     const loadCustomers = async () => {
       try {
         const response = await getCustomers({ page: 1, limit: 20 });
-        setCustomers(response);
+        setCustomers(response.data);
+        console.log("Customers loaded:", response.data);
       } catch (error) {
         console.error("Failed to load customers", error);
       } finally {
@@ -43,7 +44,7 @@ const Customers = () => {
     }
   };
 
-  const filteredCustomers = customers.filter(customer => 
+  const filteredCustomers = customers?.filter(customer => 
     customer.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
