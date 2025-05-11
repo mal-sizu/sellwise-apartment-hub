@@ -98,6 +98,11 @@ const Properties = () => {
     }
   }, [searchTerm, allProperties, loading]);
 
+  useEffect(() => {
+    const hasActiveFilters = Object.values(filters).some(val => val !== undefined && val !== "");
+    setActiveFilter(hasActiveFilters || searchTerm !== "");
+  }, [filters, searchTerm]);
+
   // Handle delete property
   const handleDeleteProperty = async (id: string) => {
     setIsDeleting(true);
@@ -171,6 +176,8 @@ const Properties = () => {
   const handleClearFilters = () => {
     setFilters({});
     setActiveFilter(false);
+    setSearchTerm(''); // Clear search term
+    setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page
   };
 
   // Animation variants
@@ -303,7 +310,7 @@ const Properties = () => {
                   placeholder="Search properties..."
                   className="form-input"
                   onChange={handleTitleSearch}
-                  value={filters.search || ""}
+                  value={searchTerm}
                 />
               </div>
               
