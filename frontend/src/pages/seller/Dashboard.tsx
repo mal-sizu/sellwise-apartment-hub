@@ -330,7 +330,7 @@ const Dashboard = () => {
                         <td className="font-medium">
                           {new Intl.NumberFormat('en-US', {
                             style: 'currency',
-                            currency: 'USD',
+                            currency: 'LKR',
                             maximumFractionDigits: 0
                           }).format(property.price)}
                         </td>

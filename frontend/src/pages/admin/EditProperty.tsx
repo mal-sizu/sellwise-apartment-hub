@@ -10,6 +10,28 @@ import { SRI_LANKA_CITIES, PROPERTY_TYPES } from "../../constants";
 import { propertyFormSchema } from "../../schemas/propertySchema";
 import { z } from "zod";
 
+// Create a new schema specifically for editing properties
+const propertyEditSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  type: z.string().min(1, "Property type is required"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  address: z.object({
+    house: z.string().min(1, "House/Building number is required"),
+    street: z.string().min(1, "Street is required"),
+    city: z.string().min(1, "City is required"),
+    postalCode: z.string().min(1, "Postal code is required"),
+  }),
+  forSale: z.boolean(),
+  price: z.number().positive("Price must be a positive number"),
+  discountPrice: z.number().positive("Discount price must be a positive number").optional(),
+  beds: z.number().int().positive("Bedrooms must be a positive integer").optional(),
+  baths: z.number().int().positive("Bathrooms must be a positive integer").optional(),
+  options: z.object({
+    parkingSpot: z.boolean().optional(),
+    furnished: z.boolean().optional(),
+  }).optional(),
+});
+
 const EditProperty = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -69,56 +91,8 @@ const EditProperty = () => {
     fetchProperty();
   }, [id]);
 
-  const validateForm = () => {
-    try {
-      // Create a modified schema that doesn't require images for editing
-      const editSchema = propertyFormSchema.omit({ images: true });
-      
-      editSchema.parse({
-        title,
-        type,
-        description,
-        address: {
-          house,
-          street,
-          city,
-          postalCode,
-        },
-        forSale,
-        price,
-        discountPrice: discountPrice || undefined,
-        beds: beds || undefined,
-        baths: baths || undefined,
-        options: {
-          parkingSpot,
-          furnished,
-        },
-      });
-      
-      setFormErrors({});
-      return true;
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const errors: Record<string, string> = {};
-        error.errors.forEach((err) => {
-          const path = err.path.join(".");
-          errors[path] = err.message;
-        });
-        setFormErrors(errors);
-      }
-      return false;
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      toast.error("Please fix the form errors");
-      return;
-    }
-    
-    if (!id) return;
     
     try {
       setSaving(true);
@@ -144,12 +118,31 @@ const EditProperty = () => {
         },
       };
       
+      // Use the new edit-specific schema
+      propertyEditSchema.parse(updatedProperty);
+      
+      // If validation passes, clear any previous errors
+      setFormErrors({});
+      
+      // Submit the data
+      if (!id) return;
       await updateProperty(id, updatedProperty);
       toast.success("Property updated successfully");
       navigate("/admin/properties");
     } catch (error) {
-      console.error("Error updating property:", error);
-      toast.error("Failed to update property");
+      if (error instanceof z.ZodError) {
+        const errors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          const path = err.path.join(".");
+          errors[path] = err.message;
+        });
+        setFormErrors(errors);
+        toast.error("Please fix the form errors");
+        console.log("Validation errors:", errors); // Add this for debugging
+      } else {
+        console.error("Error updating property:", error);
+        toast.error("Failed to update property");
+      }
     } finally {
       setSaving(false);
     }
@@ -496,6 +489,31 @@ const EditProperty = () => {
                   </div>
                 </div>
               </div>
+
+              {Object.keys(formErrors).length > 0 && (
+                <div className="mt-4 p-4 bg-red-50 rounded-md">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-red-800">
+                        There are errors in the form
+                      </h3>
+                      <div className="mt-2 text-sm text-red-700">
+                        <ul className="list-disc pl-5 space-y-1">
+                          {Object.entries(formErrors).map(([field, error]) => (
+                            <li key={field}>{error}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
 
               <div className="mt-8 flex justify-end">
                 <motion.button

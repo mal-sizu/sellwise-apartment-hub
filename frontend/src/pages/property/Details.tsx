@@ -234,16 +234,16 @@ const PropertyDetails = () => {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Listed on</span>
-                    <span>{new Date(property.createdAt).toLocaleDateString()}</span>
+                    <span>{new Date(property.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Last updated</span>
-                    <span>{new Date(property.updatedAt).toLocaleDateString()}</span>
-                  </div>
-                  <div className="flex justify-between">
+                    <span>{new Date(property.updatedAt).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                  </div>                 
+                  {/* <div className="flex justify-between">
                     <span className="text-gray-600">Property ID</span>
-                    <span>{property.id}</span>
-                  </div>
+                    <span>{property._id}</span>
+                  </div> */}
                 </div>
               </motion.div>
             </div>

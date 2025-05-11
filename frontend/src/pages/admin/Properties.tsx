@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../../components/ui/common/Navbar";
@@ -8,6 +8,7 @@ import { Property, PaginationParams, SortParams, FilterParams } from "../../type
 import { SRI_LANKA_CITIES, PROPERTY_TYPES } from "../../constants";
 import { toast } from "sonner";
 import { File } from "lucide-react";
+import { debounce } from "lodash";
 
 const Properties = () => { 
   const [properties, setProperties] = useState<Property[]>([]);
@@ -26,14 +27,49 @@ const Properties = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [activeFilter, setActiveFilter] = useState(false);
+  const [allProperties, setAllProperties] = useState<Property[]>([]);
+  const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Fetch properties based on current pagination, sort, and filters 
+  // Add a debounced search function
+  const debouncedSearch = useCallback(
+    debounce((term: string) => {
+      setFilters(prev => ({
+        ...prev,
+        title: term || undefined
+      }));
+    }, 500),
+    []
+  );
+
+  // Update the handleTitleSearch function
+  const handleTitleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    debouncedSearch(value);
+  };
+
+  // Modify the useEffect to store all properties when they're first fetched
   useEffect(() => {
     const fetchProperties = async () => {
       setLoading(true);
       try {
         const response = await getProperties(pagination, sort, filters);
-        setProperties(response.properties);
+        const fetchedProperties = response.properties;
+        
+        // Store all fetched properties
+        setAllProperties(fetchedProperties);
+        
+        // Apply title filtering if there's a search term
+        if (searchTerm) {
+          const filtered = fetchedProperties.filter(property => 
+            property.title.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+          setProperties(filtered);
+        } else {
+          setProperties(fetchedProperties);
+        }
+        
         setTotalPages(response.totalPages);
       } catch (error) {
         console.error("Error fetching properties:", error);
@@ -44,7 +80,23 @@ const Properties = () => {
     };
     
     fetchProperties();
-  }, [pagination, sort, filters]);
+  }, [pagination, sort, filters]); // Remove searchTerm from dependencies
+
+  // Add a separate useEffect to handle search term changes
+  useEffect(() => {
+    if (!loading && allProperties.length > 0) {
+      console.log("Search term changed, filtering properties");
+      if (searchTerm) {
+        const filtered = allProperties.filter(property => 
+          property.title.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        console.log("Search results:", filtered);
+        setProperties(filtered);
+      } else {
+        setProperties(allProperties);
+      }
+    }
+  }, [searchTerm, allProperties, loading]);
 
   // Handle delete property
   const handleDeleteProperty = async (id: string) => {
@@ -94,10 +146,16 @@ const Properties = () => {
   const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
     const { name, value } = e.target;
     
-    setFilters(prev => ({
-      ...prev,
-      [name]: value === "" ? undefined : name === "priceMin" || name === "priceMax" ? Number(value) : value
-    }));
+    console.log(`Filter changed: ${name} = ${value}`);
+    
+    setFilters(prev => {
+      const newFilters = {
+        ...prev,
+        [name]: value === "" ? undefined : name === "priceMin" || name === "priceMax" ? Number(value) : value
+      };
+      console.log("Updated filters:", newFilters);
+      return newFilters;
+    });
     
     // Reset to first page when filters change
     setPagination(prev => ({ ...prev, page: 1 }));
@@ -244,7 +302,7 @@ const Properties = () => {
                   name="search"
                   placeholder="Search properties..."
                   className="form-input"
-                  onChange={handleFilterChange}
+                  onChange={handleTitleSearch}
                   value={filters.search || ""}
                 />
               </div>
@@ -442,7 +500,7 @@ const Properties = () => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {properties.map((property) => (
                       <motion.tr
-                        key={property.id}
+                        key={property._id}
                         variants={rowVariants}
                       >
                         <td className="px-6 py-4">
@@ -481,7 +539,7 @@ const Properties = () => {
                             style: 'currency',
                             currency: 'LKR',
                             maximumFractionDigits: 0
-                          }).format(property.price)}
+                          }).format(property.price - property.discountPrice)}
                           {property.discountPrice && (
                             <div className="text-xs text-red-500 line-through">
                               {new Intl.NumberFormat('en-LK', {

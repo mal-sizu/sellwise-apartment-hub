@@ -1,6 +1,6 @@
 
 export type Property = {
-  id: string;
+  _id: string;
   title: string;
   type: 'Residential' | 'Commercial' | 'Industrial';
   description: string;
